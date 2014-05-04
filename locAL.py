@@ -14,18 +14,12 @@
 import sys
 import copy
 import string
-import numpy as np
 import datetime
 import random
 
 from collections import defaultdict
 
-# Match score, mismatch score, gap open, gap extend
-# Default values from website
-ms = 1
-mms = -3
-go = -2
-ge = -2
+# global ms, mms, go, ge
 
 # Backtracking variable names
 bt_zero = 0
@@ -34,37 +28,56 @@ bt_left = 2
 bt_diag = 3
 
 def main():
-  locAL()
+  if len(sys.argv) < 3 or len(sys.argv) % 2 == 0:
+    print '''Usage: python locAL.py <seq file1> <seq file2> -m <match> -s <mismatch>
+    -go <gap-open> -ge gap-extend'''
+    sys.exit(0)
 
-# readseq reads in sequences from two files in FASTA format, strips the sequence
-# of the '>' header character, and dumps the rest of the string into seq1 and
-# seq2. The tuple (seq1, seq2) is returned.
-def readseq(filename1, filename2):
-  with open(filename1) as f:
+  # Default values
+  global ms
+  global mms
+  global go
+  global ge
+
+  ms = 1
+  mms = -2
+  go = -2
+  ge = -1
+
+  # Detect flags and change parameters
+  for param in sys.argv[3:]:
+    if param == '-m':
+      ms = float(sys.argv[sys.argv.index('-m') + 1])
+    if param == '-s':
+      mms = float(sys.argv[sys.argv.index('-s') + 1])
+    if param == '-go':
+      go = float(sys.argv[sys.argv.index('-go') + 1])
+    if param == '-ge':
+      ge = float(sys.argv[sys.argv.index('-ge') + 1])
+
+  print 'Match = ', ms, '\tMismatch = ', mms
+  print 'Gap Open = ', go, '\t\tGap Extend = ', ge
+
+  # Read in seqs
+  with open(sys.argv[1]) as f:
     lines = f.readlines()
-    if len(lines) == 0:
-      print 'Error: Empty file'
-      sys.exit(0)
-    if lines[0][0] != '>':
-      print 'Bad sequence file, expected \'>\''
+    if len(lines) == 0 or lines[0][0] != '>':
+      print 'Error: Bad file'
       sys.exit(0)
     seq1 = ''.join(lines[1:])
 
-  with open(filename2) as f:
+  with open(sys.argv[2]) as f:
     lines = f.readlines()
-    if len(lines) == 0:
-      print 'Error: Empty file'
-      sys.exit(0)
-    if lines[0][0] != '>':
-      print 'Bad sequence file, expected \'>\''
+    if len(lines) == 0 or lines[0][0] != '>':
+      print 'Error: Bad file'
       sys.exit(0)
     seq2 = ''.join(lines[1:])
 
-  return (seq1, seq2)
+  locAL(seq1, seq2, ms, mms, go, ge)
 
 # Returns the numeric alignment score between the input bases
 def score(base1, base2):
-  # if gap
+  global ms, mms, go, ge
   if base1 == 'go' or base2 == 'go':
     return go
   if base1 == 'ge' or base2 == 'ge':
@@ -113,39 +126,14 @@ def printAlignment(seq1, seq2, btMatrix, best_xy):
   print 'Alignment Length:', len(query), '\nMatches:', matches, '\tMismatches:', mismatches
   print 'Total Gaps:', numgaps, '\tGap Opens:', numgaps - numGapExtends, '\tGap Extends:', numGapExtends
 
+  return (len(query), matches, mismatches, numgaps, numGapExtends)
 
-def locAL():
-  global ms, mms, go, ge
-  if len(sys.argv) < 3 or len(sys.argv) % 2 == 0:
-    print '''Usage: python locAL.py <seq file1> <seq file2> -m <match> -s <mismatch>
-    -go <gap-open> -ge gap-extend'''
-    sys.exit(0)
 
-  # Detect flags and change parameters
-  for param in sys.argv[3:]:
-    if param == '-m':
-      ms = float(sys.argv[sys.argv.index('-m') + 1])
-    if param == '-s':
-      mms = float(sys.argv[sys.argv.index('-s') + 1])
-    if param == '-go':
-      go = float(sys.argv[sys.argv.index('-go') + 1])
-    if param == '-ge':
-      ge = float(sys.argv[sys.argv.index('-ge') + 1])
-
-  print 'Match = ', ms, '\tMismatch = ', mms
-  print 'Gap Open = ', go, '\t\tGap Extend = ', ge
-
-  # Read in seqs
-  seq1 = ''
-  seq2 = ''
-  (seq1, seq2) = readseq(sys.argv[1], sys.argv[2])
-
-  # print 'Aligning the following seqs:\n', seq1, '\n', seq2, '\n'
-
+def locAL(seq1, seq2, ms, mms, go, ge):
   # s is 2d array of size (seq1 + 1 by seq2 + 1), init. to 0's
-  s_mat = np.zeros((len(seq1) + 1, len(seq2) + 1))
-  d_mat = np.zeros((len(seq1) + 1, len(seq2) + 1))
-  bt_mat = np.zeros((len(seq1) + 1, len(seq2) + 1))
+  s_mat = [[0]*(len(seq2) + 1) for i in range(len(seq1) + 1)]
+  d_mat = [[0]*(len(seq2) + 1) for i in range(len(seq1) + 1)]
+  bt_mat = [[0]*(len(seq2) + 1) for i in range(len(seq1) + 1)]
 
   # initialize d and i, which can have negative scores
   d_mat[1][0] = go + ge
@@ -158,8 +146,8 @@ def locAL():
 
   best = (0, 0, 0)
 
-  print 'Generating alignment, to', len(seq1), '...'
-  # generate local alignment
+  print 'Generating alignment... Sequence len:', len(seq1)
+  # Generate local alignment
   for i in xrange(1, len(seq1) + 1):
     # print i # track progress
     for j in xrange(1, len(seq2) + 1):
@@ -188,13 +176,14 @@ def locAL():
       if s_mat[i][j] >= best[0]:
         best = (s_mat[i][j], i, j)
 
-  printAlignment(seq1, seq2, bt_mat, best[1:])
-  print '(Score, row, column) = ', best
+  (alignLen, matches, mismatches, numgaps, numGapExtends) = printAlignment(seq1, seq2, bt_mat, best[1:])
+  print 'Score =', best[0]
   # print s_mat, '\n'
   # print bt_mat, '\n'
   # print d_mat, '\n'
   # print i_mat
-  print 'Done.'
+
+  return (alignLen, matches, mismatches, numgaps, numGapExtends)
 
 # Returns the number of gap extensions
 def printSeqs(query, db):
