@@ -1,0 +1,76 @@
+==> sample_out1.txt <==
+Match =  1.0 	Mismatch =  -1.1
+Gap Open =  -3.3 		Gap Extend =  -1.0
+CGCATG-TATTAGTACGTCTACGTATTGCGGGATTTCACTGCGATCCGTTC 
+|||||| |||||*|||||*||| | |||||*|**|||||||||||*|*||| 
+CGCATGATATTAATACGTATAC-T-TTGCGCGGGTTCACTGCGATTCCTTC
+Alignment Length: 51 
+Matches: 41 	Mismatches: 7
+Total Gaps: 3 	Gap Opens: 3 	Gap Extends: 0
+(Score, row, column) =  (21.6, 129, 218)
+
+==> sample_out2.txt <==
+Match =  1.0 	Mismatch =  -1.1
+Gap Open =  -3.0 		Gap Extend =  -1.0
+CGCATG-TATTAGTACGTCTACGTATTGCGGGATTTCACTGCGATCCGTTC 
+|||||| |||||*|||||*|||  *|||||*|**|||||||||||*|*||| 
+CGCATGATATTAATACGTATAC--TTTGCGCGGGTTCACTGCGATTCCTTC
+Alignment Length: 51 
+Matches: 40 	Mismatches: 8
+Total Gaps: 3 	Gap Opens: 2 	Gap Extends: 1
+(Score, row, column) =  (22.2, 129, 218)
+
+==> sample_out3.txt <==
+Match =  1.0 	Mismatch =  -1.0
+Gap Open =  -3.0 		Gap Extend =  -1.0
+CGCATG-TATTAGTACGTCTACGTATTGCGGGATTTCACTGCGATCCGTTCAGAG 
+|||||| |||||*|||||*|||  *|||||*|**|||||||||||*|*|||*|*| 
+CGCATGATATTAATACGTATAC--TTTGCGCGGGTTCACTGCGATTCCTTCTGCG
+Alignment Length: 55 
+Matches: 42 	Mismatches: 10
+Total Gaps: 3 	Gap Opens: 2 	Gap Extends: 1
+(Score, row, column) =  (23.0, 133, 222)
+
+==> sample_out5.txt <==
+Match =  1.0 	Mismatch =  -3.0
+Gap Open =  -3.0 		Gap Extend =  -1.0
+CGCATG-TATTAGTACGTCTACGTATTGCG-GGATTTCACTGCGAT 
+|||||| |||||*|||||*||| | ||||| ||* ||||||||||| 
+CGCATGATATTAATACGTATAC-T-TTGCGCGGG-TTCACTGCGAT
+Alignment Length: 46 
+Matches: 38 	Mismatches: 3
+Total Gaps: 5 	Gap Opens: 5 	Gap Extends: 0
+(Score, row, column) =  (11.0, 123, 212)
+
+==> sample_out6.txt <==
+Match =  1.0 	Mismatch =  -4.0
+Gap Open =  -3.0 		Gap Extend =  -1.0
+GCGGGATTTCACTGCGAT 
+|||||  ||||||||||| 
+GCGGG--TTCACTGCGAT
+Alignment Length: 18 
+Matches: 16 	Mismatches: 0
+Total Gaps: 2 	Gap Opens: 1 	Gap Extends: 1
+(Score, row, column) =  (11.0, 123, 212)
+
+==> sample_out7.txt <==
+Match =  1.0 	Mismatch =  -2.0
+Gap Open =  -2.0 		Gap Extend =  -1.0
+AGAC--CGCATG-TATTAGTACGTCTACGTATTGCGGGATTTCACTGCGATCCGTTC 
+||||  |||||| |||||*|||||*||| | |||||*|**|||||||||||*|*||| 
+AGACGTCGCATGATATTAATACGTATAC-T-TTGCGCGGGTTCACTGCGATTCCTTC
+Alignment Length: 57 
+Matches: 45 	Mismatches: 7
+Total Gaps: 5 	Gap Opens: 4 	Gap Extends: 1
+(Score, row, column) =  (18.0, 129, 218)
+
+==> sample_out8.txt <==
+Match =  1.0 	Mismatch =  -3.0
+Gap Open =  -3.0 		Gap Extend =  -2.0
+TTCACTGCGAT 
+||||||||||| 
+TTCACTGCGAT
+Alignment Length: 11 
+Matches: 11 	Mismatches: 0
+Total Gaps: 0 	Gap Opens: 0 	Gap Extends: 0
+(Score, row, column) =  (11.0, 123, 212)
