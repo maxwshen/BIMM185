@@ -29,8 +29,7 @@ bt_diag = 3
 
 def main():
   if len(sys.argv) < 3 or len(sys.argv) % 2 == 0:
-    print '''Usage: python locAL.py <seq file1> <seq file2> -m <match> -s <mismatch>
-    -go <gap-open> -ge gap-extend'''
+    print 'Usage: python locAL.py <seq file1> <seq file2> -m <match> -s <mismatch> -go <gap-open> -ge gap-extend'
     sys.exit(0)
 
   # Default values
@@ -38,11 +37,12 @@ def main():
   global mms
   global go
   global ge
-
+  global silenced
   ms = 1
   mms = -2
   go = -2
   ge = -1
+  silenced = False
 
   # Detect flags and change parameters
   for param in sys.argv[3:]:
@@ -57,6 +57,14 @@ def main():
 
   print 'Match = ', ms, '\tMismatch = ', mms
   print 'Gap Open = ', go, '\t\tGap Extend = ', ge
+
+  # Ensure scoring values are valid
+  if ms < 0 or mms > 0 or go > 0 or ge > 0:
+    print 'ERROR: Bad scoring parameter values'
+    sys.exit(0)
+  if ms - 3 * mms > 0:
+    print 'ERROR: Positive expected score for background'
+    sys.exit(0)
 
   # Read in seqs
   with open(sys.argv[1]) as f:
@@ -73,7 +81,23 @@ def main():
       sys.exit(0)
     seq2 = ''.join(lines[1:])
 
-  locAL(seq1, seq2, ms, mms, go, ge)
+  return locAL(seq1, seq2)
+
+# Used when calling locAL from another python script
+def external(seq1, seq2, mscore, mmscore, goscore, gescore):
+  global ms
+  global mms
+  global go
+  global ge
+  global silenced
+  ms = mscore
+  mms = mmscore
+  go = goscore
+  ge = gescore
+  silenced = True
+
+
+  return locAL(seq1, seq2)
 
 # Returns the numeric alignment score between the input bases
 def score(base1, base2):
@@ -89,7 +113,8 @@ def score(base1, base2):
 
 # Given the backtracking matrix, prints out the best local alignment
 def printAlignment(seq1, seq2, btMatrix, best_xy):
-  print 'Printing alignment...'
+  if not silenced:
+    print 'Printing alignment...'
   (i, j) = best_xy
   query = ''
   db = ''
@@ -123,13 +148,14 @@ def printAlignment(seq1, seq2, btMatrix, best_xy):
   db = db[::-1]
 
   numGapExtends = printSeqs(query, db)
-  print 'Alignment Length:', len(query), '\nMatches:', matches, '\tMismatches:', mismatches
-  print 'Total Gaps:', numgaps, '\tGap Opens:', numgaps - numGapExtends, '\tGap Extends:', numGapExtends
+  if not silenced:
+    print 'Alignment Length:', len(query), '\nMatches:', matches, '\tMismatches:', mismatches
+    print 'Total Gaps:', numgaps, '\tGap Opens:', numgaps - numGapExtends, '\tGap Extends:', numGapExtends
 
   return (len(query), matches, mismatches, numgaps, numGapExtends)
 
 
-def locAL(seq1, seq2, ms, mms, go, ge):
+def locAL(seq1, seq2):
   # s is 2d array of size (seq1 + 1 by seq2 + 1), init. to 0's
   s_mat = [[0]*(len(seq2) + 1) for i in range(len(seq1) + 1)]
   d_mat = [[0]*(len(seq2) + 1) for i in range(len(seq1) + 1)]
@@ -146,7 +172,8 @@ def locAL(seq1, seq2, ms, mms, go, ge):
 
   best = (0, 0, 0)
 
-  print 'Generating alignment... Sequence len:', len(seq1)
+  if not silenced:
+    print 'Generating alignment... Sequence len:', len(seq1)
   # Generate local alignment
   for i in xrange(1, len(seq1) + 1):
     # print i # track progress
@@ -177,7 +204,8 @@ def locAL(seq1, seq2, ms, mms, go, ge):
         best = (s_mat[i][j], i, j)
 
   (alignLen, matches, mismatches, numgaps, numGapExtends) = printAlignment(seq1, seq2, bt_mat, best[1:])
-  print 'Score =', best[0]
+  if not silenced: 
+    print 'Score =', best[0]
   # print s_mat, '\n'
   # print bt_mat, '\n'
   # print d_mat, '\n'
@@ -198,7 +226,8 @@ def printSeqs(query, db):
         numGapExtends += 1
     else:
       m += '*'
-  print query, '\n', m, '\n', db
+  if not silenced:
+    print query, '\n', m, '\n', db
   return numGapExtends
 
 # main
