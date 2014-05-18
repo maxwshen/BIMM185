@@ -1,5 +1,5 @@
 # locAL.py
-# CSE 182, Assignment 2
+# BIMM 185
 # Max Shen A10082759
 #
 # python locAL.py <seq file1> <seq file2> -m <match> -s <mismatch>
@@ -18,8 +18,6 @@ import datetime
 import random
 
 from collections import defaultdict
-
-# global ms, mms, go, ge
 
 # Backtracking variable names
 bt_zero = 0
@@ -62,8 +60,9 @@ def main():
   if ms < 0 or mms > 0 or go > 0 or ge > 0:
     print 'ERROR: Bad scoring parameter values'
     sys.exit(0)
-  if ms - 3 * mms > 0:
+  if ms + 3 * mms > 0:
     print 'ERROR: Positive expected score for background'
+    print ms - 3*mms
     sys.exit(0)
 
   # Read in seqs
@@ -90,12 +89,11 @@ def external(seq1, seq2, mscore, mmscore, goscore, gescore):
   global go
   global ge
   global silenced
-  ms = mscore
-  mms = mmscore
-  go = goscore
-  ge = gescore
+  ms = float(mscore)
+  mms = float(mmscore)
+  go = float(goscore)
+  ge = float(gescore)
   silenced = True
-
 
   return locAL(seq1, seq2)
 
@@ -226,8 +224,8 @@ def printSeqs(query, db):
         numGapExtends += 1
     else:
       m += '*'
-  if not silenced:
-    print query, '\n', m, '\n', db
+  # if not silenced:
+  print query, '\n', m, '\n', db
   return numGapExtends
 
 # main
