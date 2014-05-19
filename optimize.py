@@ -55,46 +55,57 @@ def optimize(seq1, seq2):
   seeds = []
   traversed = set()
   gridsize = 0.5
-  for i in np.arange(mms_lowbound, mms_highbound, gridsize):
-    for j in np.arange(go_lowbound, go_highbound, gridsize):
-      for k in np.arange(ge_lowbound, ge_highbound, gridsize):
+  numiterations = 0
+  for i in np.arange(mms_lowbound + gridsize/2, mms_highbound - gridsize/2, gridsize):
+    for j in np.arange(go_lowbound + gridsize/2, go_highbound - gridsize/2, gridsize):
+      for k in np.arange(ge_lowbound + gridsize/2, ge_highbound - gridsize/2, gridsize):
         seeds.append([i, j, k])
   print len(seeds), 'starting seeds at distance', gridsize
   seeds = list(np.random.permutation(seeds))
 
   best = defaultdict(list)
+  best[0] = []
   while len(seeds) > 0:
+    # print numiterations
     seed = seeds[0]
     seeds = seeds[1:]
+    if len(seeds) == 0:
+      for key in best:
+        for val in best[key]:
+          seeds.append(val)
+
     if tuple(seed) not in traversed:
       traversed.add(tuple(seed))
-      bestdir, bestAcc = explore(seq1, seq2, seed, .1)
-      if bestdir is not None:
-        seeds.append(bestdir)
-      best[bestAcc].append(bestdir)
-      print best
+
+      # Store any positions whose accuracy is greater than the smallest
+      # in the dict best. Best is initialized containing 0 which is
+      # removed after more than 20 items are inserted into the list.
+      tries = explore(seq1, seq2, seed, .1)
+      for key in tries:
+        if key > min(best):
+          if key not in best:
+            best[key].append(list(np.random.permutation(tries[key])[0]))
+          else:
+            best[key].append(list(np.random.permutation(tries[key])[0]))
+
+      # Remove all keys outside the top 20. Keep only top 20
+      if len(best) > 20:
+        keys = best.keys()
+        keys.sort(reverse = True)
+        tempdict = defaultdict(list)
+        for i in range(20):
+          tempdict[keys[i]] = best[keys[i]]
+        best = tempdict
+        # print best, numiterations
+      # print best
+
+    print np.average(best.keys())
+    numiterations += 1
+    if numiterations > 400:
+      break
+
 
   return
-  # Brute force 
-  # results = defaultdict(list)
-  # for i in np.arange(-0.6, -4.5, -0.2):
-  #   mms = i
-  #   for j in np.arange(0, -4.5, -0.2):
-  #     go = j
-  #     for k in np.arange(0, -3, -0.2):
-  #       ge = k
-  #       # print ms, mms, go, ge
-  #       stats = locAL.external(seq1, seq2, ms, mms, go, ge)
-  #       if stats not in results:
-  #         results[stats] = [(ms, mms, go, ge)]
-  #       else:
-  #         results[stats].append((ms, mms, go, ge))
-
-  # for i in results:
-  #   print float(i[1])/float(i[0]), i, ':',
-  #   for j in results[i]:
-  #     print '({0}, {1}, {2}, {3})'.format(round(j[0], 2), round(j[1], 2), round(j[2], 2), round(j[3], 2)),
-  #   print '\n',
 
 # Explores seed in all directions in 3D Space (27 possibilities) with 
 # _step size
@@ -110,13 +121,13 @@ def explore(seq1, seq2, seed, step):
         go_t = seed[1] + j
         ge_t = seed[2] + k
         if mms_lowbound < mms_t < mms_highbound and go_t < go_highbound and ge_t < ge_highbound:
-          print mms_t, go_t, ge_t
+          # print mms_t, go_t, ge_t
           stats = locAL.external(seq1, seq2, ms, mms_t, go_t, ge_t)
           accuracy = float(stats[1]*100)/float(stats[0])
-          print stats, accuracy
-          best[accuracy].append((i, j, k))
+          # print stats, accuracy
+          best[accuracy].append((mms_t, go_t, ge_t))
 
-  # return best
+  return best
 
   # print max(best), best[max(best)]
   # print best

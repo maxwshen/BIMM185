@@ -224,8 +224,8 @@ def printSeqs(query, db):
         numGapExtends += 1
     else:
       m += '*'
-  # if not silenced:
-  print query, '\n', m, '\n', db
+  if not silenced:
+    print query, '\n', m, '\n', db
   return numGapExtends
 
 # main
