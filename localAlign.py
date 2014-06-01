@@ -22,6 +22,7 @@ def localAlign(q1, q2, scoringfile):
   aa = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K',
    'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'Z', 'X', '*']
   scoringmat = readMatrix(scoringfile)
+  print 'Aligning with', scoringfile
   indel = -5
   q1 = ' ' + q1
   q2 = ' ' + q2
@@ -139,7 +140,7 @@ def printBT(s, bt, q1, q2, i, j):
 # Initiates program and records total time
 if __name__ == '__main__':
   start = datetime.datetime.now()
-  print 'Start:', start
+  print 'Start:', start, '\n'
   main()
   end = datetime.datetime.now()
   print '\nEnd:', end, '\nTotal:', end - start
