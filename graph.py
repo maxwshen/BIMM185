@@ -1,6 +1,11 @@
 # Run on Windows, not debruijn
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+import datetime
+import string
+import random
+
 
 def main():
   if len(sys.argv) != 2:
