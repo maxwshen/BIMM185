@@ -23,7 +23,7 @@ def localAlign(q1, q2, scoringfile):
    'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'Z', 'X', '*']
   scoringmat = readMatrix(scoringfile)
   print 'Aligning with', scoringfile
-  indel = -5
+  indel = float(scoringmat[-1][1])
   q1 = ' ' + q1
   q2 = ' ' + q2
   s = [[0]*(len(q1)) for i in range(len(q2))]
@@ -71,7 +71,7 @@ def localAlign(q1, q2, scoringfile):
   #   print i
   f1 = []
   f2 = []
-  printBT(s, bt, q1, q2, best['i'], best['j'])
+  printBT(s, bt, q1, q2, best['i'], best['j'], scoringmat, aa)
   print 'Score =', s[best['i']][best['j']]
 
 def readMatrix(scoringfile):
@@ -85,7 +85,7 @@ def readMatrix(scoringfile):
         save = True
   return mat
 
-def printBT(s, bt, q1, q2, i, j):
+def printBT(s, bt, q1, q2, i, j, scoringmat, aa):
   f1 = []
   f2 = []
   while True:
@@ -110,6 +110,7 @@ def printBT(s, bt, q1, q2, i, j):
   mid = ''
   seq2 = ''
   matches = float(0)
+  posmatches = float(0)
   mismatches = 0
   gapopen = 0
   gapextend = 0
@@ -128,13 +129,19 @@ def printBT(s, bt, q1, q2, i, j):
         else:
           gapopen += 1
     else:
-      mid += '*'
-      mismatches += 1
+      f1i = aa.index(f1[i])
+      f2i = aa.index(f2[i])
+      if int(scoringmat[f1i][f2i]) > 0:
+        mid += '+'
+        posmatches += 1
+      else:
+        mid += '*'
+        mismatches += 1
 
   print seq1, '\n', mid, '\n', seq2
-  print 'Accuracy =', 100*matches / totalLen
+  print 'Accuracy =', 100*(matches+posmatches) / totalLen, '%'
   print 'Length =', len(f1)
-  print 'M:', int(matches), '\tMM:', mismatches, '\tGO:', gapopen, '\tGE:', gapextend
+  print 'M:', int(matches), '\tPM:', int(posmatches), '\tMM:', mismatches, '\tGO:', gapopen, '\tGE:', gapextend
       
 
 # Initiates program and records total time
