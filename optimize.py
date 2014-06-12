@@ -56,9 +56,9 @@ def optimize(seq1, seq2):
   traversed = set()
   gridsize = 0.5
   numiterations = 0
-  for i in np.arange(mms_lowbound + gridsize/2, mms_highbound - gridsize/2, gridsize):
-    for j in np.arange(go_lowbound + gridsize/2, go_highbound - gridsize/2, gridsize):
-      for k in np.arange(ge_lowbound + gridsize/2, ge_highbound - gridsize/2, gridsize):
+  for i in np.arange(mms_lowbound, mms_highbound, gridsize):
+    for j in np.arange(go_lowbound, go_highbound, gridsize):
+      for k in np.arange(ge_lowbound, ge_highbound, gridsize):
         seeds.append([i, j, k])
   print len(seeds), 'starting seeds at distance', gridsize
   seeds = list(np.random.permutation(seeds))
@@ -80,13 +80,12 @@ def optimize(seq1, seq2):
       # Store any positions whose accuracy is greater than the smallest
       # in the dict best. Best is initialized containing 0 which is
       # removed after more than 20 items are inserted into the list.
-      tries = explore(seq1, seq2, seed, .1)
-      for key in tries:
-        if key > min(best):
-          if key not in best:
-            best[key].append(list(np.random.permutation(tries[key])[0]))
-          else:
-            best[key].append(list(np.random.permutation(tries[key])[0]))
+      # Do not explore
+      stats = locAL.external(seq1, seq2, ms, seed[0], seed[1], seed[2])
+      accuracy = float(stats[1]*100)/float(stats[0])
+
+      if accuracy > min(best):
+        best[accuracy].append(seed)
 
       # Remove all keys outside the top 20. Keep only top 20
       if len(best) > 20:
@@ -99,13 +98,37 @@ def optimize(seq1, seq2):
         # print best, numiterations
       # print best
 
-    print np.average(best.keys())
+
+    print numiterations, np.average(best.keys())
+    findRange(best)
+
     numiterations += 1
     if numiterations > 400:
       break
 
 
   return
+
+# Input: best, a dictionary.
+#   Keys are accuracy percents
+#   Values are coordinates
+# Output:
+#   Lowest and highest values in best for mms, go, and ge
+def findRange(best):
+  _mms = set()
+  _go = set()
+  _ge = set()
+
+  for key in best:
+    for value in best[key]:
+      _mms.add(value[0])
+      _go.add(value[1])
+      _ge.add(value[2])
+
+  print 'mms:', min(_mms), max(_mms)
+  print 'go:', min(_go), max(_go)
+  print 'ge:', min(_ge), max(_ge)
+
 
 # Explores seed in all directions in 3D Space (27 possibilities) with 
 # _step size
