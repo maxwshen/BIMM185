@@ -37,6 +37,7 @@ def main():
   global go_lowbound
   global ge_highbound
   global ge_lowbound
+  global gridsize
   ms = 1
   mms = -2
   go = -2
@@ -47,32 +48,32 @@ def main():
   go_lowbound = -4.5
   ge_highbound = 0
   ge_lowbound = -3
+  gridsizeAll = [0.5, 0.3, 0.2, 0.1]
+  gridsize = 0.5
 
-
-  optimize(seq1, seq2)
+  for i in range(len(gridsizeAll)):
+    gridsize = gridsizeAll[i]
+    optimize(seq1, seq2)
 
 def optimize(seq1, seq2):
   seeds = []
   traversed = set()
-  gridsize = 0.5
   numiterations = 0
   for i in np.arange(mms_lowbound, mms_highbound, gridsize):
     for j in np.arange(go_lowbound, go_highbound, gridsize):
       for k in np.arange(ge_lowbound, ge_highbound, gridsize):
         seeds.append([i, j, k])
   print len(seeds), 'starting seeds at distance', gridsize
+  print 'mms:', mms_lowbound, mms_highbound, '\tgo:', go_lowbound, go_highbound, '\tge:', ge_lowbound, ge_highbound
   seeds = list(np.random.permutation(seeds))
 
   best = defaultdict(list)
   best[0] = []
   while len(seeds) > 0:
-    # print numiterations
     seed = seeds[0]
     seeds = seeds[1:]
     if len(seeds) == 0:
-      for key in best:
-        for val in best[key]:
-          seeds.append(val)
+      break
 
     if tuple(seed) not in traversed:
       traversed.add(tuple(seed))
@@ -99,14 +100,12 @@ def optimize(seq1, seq2):
       # print best
 
 
-    print numiterations, np.average(best.keys())
-    findRange(best)
-
+    # print numiterations, len(seeds), np.average(best.keys())
+    print len(seeds), np.average(best.keys())
     numiterations += 1
-    if numiterations > 400:
-      break
 
-
+  print numiterations, gridsize, np.average(best.keys())
+  setRange(best)
   return
 
 # Input: best, a dictionary.
@@ -114,7 +113,14 @@ def optimize(seq1, seq2):
 #   Values are coordinates
 # Output:
 #   Lowest and highest values in best for mms, go, and ge
-def findRange(best):
+def setRange(best):
+  global mms_lowbound
+  global mms_highbound
+  global go_lowbound
+  global go_highbound
+  global ge_lowbound
+  global ge_highbound
+
   _mms = set()
   _go = set()
   _ge = set()
@@ -128,6 +134,15 @@ def findRange(best):
   print 'mms:', min(_mms), max(_mms)
   print 'go:', min(_go), max(_go)
   print 'ge:', min(_ge), max(_ge)
+
+  mms_lowbound = min(_mms)
+  mms_highbound = max(_mms)
+  go_lowbound = min(_go)
+  go_highbound = max(_go)
+  ge_lowbound = min(_ge)
+  ge_highbound = max(_ge)
+
+  return
 
 
 # Explores seed in all directions in 3D Space (27 possibilities) with 
