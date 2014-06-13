@@ -58,8 +58,8 @@ def main():
   ge_highbound = 0
   ge_lowbound = -3
   # gridsizeAll = [0.5, 0.3, 0.2, 0.1]
-  gridsizeAll = [0.5, 0.25]
-  # gridsizeAll = [0.5]
+  # gridsizeAll = [0.5, 0.25]
+  gridsizeAll = [0.5]
   gridsize = 0.5
   cullingPct = float(sys.argv[3])
   cutMM = False
@@ -69,6 +69,7 @@ def main():
 
   for i in range(len(gridsizeAll)):
     gridsize = gridsizeAll[i]
+    print 'Training Iteration', i + 1
     optimize(seq1, seq2)
 
 # Performs search space reduction using seq1 and seq2 as training
@@ -117,9 +118,10 @@ def optimize(seq1, seq2):
       for j in np.arange(go_lowbound, go_highbound, gridsize):
         for k in np.arange(ge_lowbound, ge_highbound, gridsize):
           seeds.append([i, j, k])
-  print len(seeds), 'starting seeds at distance', gridsize
-  print 'mms:', mms_lowbound, mms_highbound, '\tgo:', go_lowbound, go_highbound, '\tge:', ge_lowbound, ge_highbound
+  print len(seeds), 'starting seeds at step size', gridsize
+  print 'Current Search Space:\n\tmms:', mms_lowbound, mms_highbound, '\tgo:', go_lowbound, go_highbound, '\tge:', ge_lowbound, ge_highbound
   seeds = list(np.random.permutation(seeds))
+  totalseeds = len(seeds)
 
   totalGaps = 0
   totalMM = 0
@@ -165,10 +167,12 @@ def optimize(seq1, seq2):
 
 
     # print numiterations, len(seeds), np.average(best.keys())
-    print len(seeds), np.average(best.keys())
+    # print numiterations, np.average(best.keys())
+    sys.stdout.write('\r' + str(numiterations) + ' / ' + str(totalseeds) + ' '*10)
+    sys.stdout.flush()
     numiterations += 1
 
-  print '#iterations, gridsize, avg:', numiterations, gridsize, np.average(best.keys())
+  print 'Done.\nAvg top accuracy:', np.average(best.keys())
   print 'totalGaps:', totalGaps, 'totalMM:', totalMM
   print best.keys()
 
@@ -177,10 +181,10 @@ def optimize(seq1, seq2):
   cutGaps = False
   if totalMM > threshold * totalGaps:
     cutGaps = True
-    print 'cutGaps set to True'
+    print 'Alignment mutations are primarily mismatches. Next iteration, gap search space will be reduced to', 100 * cutPercent, '%. Threshold:', threshold 
   elif totalGaps > threshold * totalMM:
     cutMM = True
-    print 'cutMM set to True'
+    print 'Alignment mutations are primarily gaps. Next iteration, mismatch search space will be reduced to', 100 * cutPercent, '%. Threshold:', threshold
 
   return
 
@@ -227,14 +231,21 @@ def setRange(best):
   for i in range(cullingNum):
     _geCulled.append(_ge[i])
 
-  print 'mms:', min(_mms), max(_mms)
-  print 'go:', min(_go), max(_go)
-  print 'ge:', min(_ge), max(_ge)
-  naiveVolume = (min(_mms) - max(_mms))
+  initVolume = (mms_highbound - mms_lowbound) * (go_highbound - go_lowbound) * (ge_highbound - ge_lowbound)
 
-  print 'mms:', min(_mmsCulled), max(_mmsCulled)
-  print 'go:', min(_goCulled), max(_goCulled)
-  print 'ge:', min(_geCulled), max(_geCulled)
+  # print 'mms:', min(_mms), max(_mms)
+  # print 'go:', min(_go), max(_go)
+  # print 'ge:', min(_ge), max(_ge)
+  naiveVolume = (max(_mms) - min(_mms)) * (max(_go) - min(_go)) * (max(_ge) - min(_ge))
+
+  # print 'mms:', min(_mmsCulled), max(_mmsCulled)
+  # print 'go:', min(_goCulled), max(_goCulled)
+  # print 'ge:', min(_geCulled), max(_geCulled)
+  culledVolume = (max(_mmsCulled) - min(_mmsCulled)) * (max(_goCulled) - min(_goCulled)) * (max(_geCulled) - min(_geCulled))
+
+  print 'No Culling : Search space reduced to', 100 * naiveVolume / initVolume, '%'
+  print 'Culling at', cullingPct, ': Search space reduced to', 100 * culledVolume / initVolume, '%'
+  print 'Culling Improvement:', (naiveVolume - culledVolume) / initVolume, '%' 
 
   mms_lowbound = min(_mmsCulled)
   mms_highbound = max(_mmsCulled)
