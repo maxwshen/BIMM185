@@ -18,6 +18,7 @@ def main():
     if len(lines) == 0 or lines[0][0] != '>':
       print 'Error: Bad fasta file'
       sys.exit(0)
+    seq1name = lines[0].strip()
     seq1 = ''.join(lines[1:])
 
   with open(sys.argv[2]) as f:
@@ -25,11 +26,14 @@ def main():
     if len(lines) == 0 or lines[0][0] != '>':
       print 'Error: Bad fasta file'
       sys.exit(0)
+    seq2name = lines[0].strip()
     seq2 = ''.join(lines[1:])
 
   if float(sys.argv[3]) <= 0 or float(sys.argv[3]) > 1:
     print 'Bad cullingPct'
     sys.exit(0) 
+
+  print 'Training on:\n\t', seq1name, '\n\t', seq2name, '\n'
 
   global ms
   global mms
@@ -292,6 +296,7 @@ def explore(seq1, seq2, seed, step):
 # Initiates program and records total time
 if __name__ == '__main__':
   start = datetime.datetime.now()
+  print 'Efficient Exploration of Rational Sequence Alignment (EERSA) v1.0'
   print 'Start:', start, '\n'
   main()
   end = datetime.datetime.now()
