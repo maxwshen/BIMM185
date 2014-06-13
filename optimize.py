@@ -16,14 +16,14 @@ def main():
   with open(sys.argv[1]) as f:
     lines = f.readlines()
     if len(lines) == 0 or lines[0][0] != '>':
-      print 'Error: Bad file'
+      print 'Error: Bad fasta file'
       sys.exit(0)
     seq1 = ''.join(lines[1:])
 
   with open(sys.argv[2]) as f:
     lines = f.readlines()
     if len(lines) == 0 or lines[0][0] != '>':
-      print 'Error: Bad file'
+      print 'Error: Bad fasta file'
       sys.exit(0)
     seq2 = ''.join(lines[1:])
 
@@ -43,39 +43,91 @@ def main():
   global ge_lowbound
   global gridsize
   global cullingPct
+  global cutMM
+  global cutGaps
+  global threshold
+  global cutPercent
   ms = 1
   mms = -2
   go = -2
   ge = -1
-  mms_lowbound = -4.5
+  mms_lowbound = -4.0
   mms_highbound = -0.6
   go_highbound = 0
-  go_lowbound = -4.5
+  go_lowbound = -4.0
   ge_highbound = 0
   ge_lowbound = -3
   # gridsizeAll = [0.5, 0.3, 0.2, 0.1]
-  gridsizeAll = [1.0, 0.8]
+  gridsizeAll = [0.5, 0.25]
+  # gridsizeAll = [0.5]
   gridsize = 0.5
   cullingPct = float(sys.argv[3])
+  cutMM = False
+  cutGaps = False
+  threshold = 1.50
+  cutPercent = 0.50
 
   for i in range(len(gridsizeAll)):
     gridsize = gridsizeAll[i]
     optimize(seq1, seq2)
 
+# Performs search space reduction using seq1 and seq2 as training
+# Input:
+#   seq1: A DNA string
+#   seq2: A DNA string
+# Output:
+#   Modifies mms_lowbound, mms_highbound, go_lowbound, go_highbound,
+#     ge_lowbound, and ge_highbound based on the most accurate
+#     alignments found in the search space.
 def optimize(seq1, seq2):
+  global cutMM
+  global cutGaps
+  global threshold
+  global cutPercent
+
   seeds = []
   traversed = set()
   numiterations = 0
-  for i in np.arange(mms_lowbound, mms_highbound, gridsize):
-    for j in np.arange(go_lowbound, go_highbound, gridsize):
-      for k in np.arange(ge_lowbound, ge_highbound, gridsize):
-        seeds.append([i, j, k])
+
+  if cutMM is True:
+    mms_width = mms_lowbound - mms_highbound
+    mms_cutHigh = mms_highbound + (mms_width * (cutPercent / 2))
+    mms_cutLow = mms_highbound + (mms_width * (1 - cutPercent / 2))
+    print 'New mms:', mms_cutLow, mms_cutHigh
+    for i in np.arange(mms_cutLow, mms_cutHigh, gridsize):
+      for j in np.arange(go_lowbound, go_highbound, gridsize):
+        for k in np.arange(ge_lowbound, ge_highbound, gridsize):    
+          seeds.append([i, j, k])
+  elif cutGaps is True:
+    go_width = go_lowbound - go_highbound
+    go_cutHigh = go_highbound + (go_width * (cutPercent / 2))
+    go_cutLow = go_highbound + (go_width * (1 - cutPercent / 2)) 
+    
+    ge_width = ge_lowbound - ge_highbound
+    ge_cutHigh = ge_highbound + (ge_width * (cutPercent / 2))
+    ge_cutLow = ge_highbound + (ge_width * (1 - cutPercent / 2))
+    print 'New go:', go_cutLow, go_cutHigh
+    print 'New ge:', ge_cutLow, ge_cutHigh  
+    for i in np.arange(mms_lowbound, mms_highbound, gridsize):
+      for j in np.arange(go_cutLow, go_cutHigh, gridsize):
+        for k in np.arange(ge_cutLow, ge_cutHigh, gridsize):   
+          seeds.append([i, j, k])    
+  else:
+    for i in np.arange(mms_lowbound, mms_highbound, gridsize):
+      for j in np.arange(go_lowbound, go_highbound, gridsize):
+        for k in np.arange(ge_lowbound, ge_highbound, gridsize):
+          seeds.append([i, j, k])
   print len(seeds), 'starting seeds at distance', gridsize
   print 'mms:', mms_lowbound, mms_highbound, '\tgo:', go_lowbound, go_highbound, '\tge:', ge_lowbound, ge_highbound
   seeds = list(np.random.permutation(seeds))
 
+  totalGaps = 0
+  totalMM = 0
+
   best = defaultdict(list)
-  best[0] = []
+  smallest = 0
+  overflow = False
+  # best[0] = []
   while len(seeds) > 0:
     seed = seeds[0]
     seeds = seeds[1:]
@@ -84,23 +136,28 @@ def optimize(seq1, seq2):
 
     if tuple(seed) not in traversed:
       traversed.add(tuple(seed))
+      if overflow:
+        smallest = min(best.keys())
 
       # Store any positions whose accuracy is greater than the smallest
       # in the dict best. Best is initialized containing 0 which is
-      # removed after more than 20 items are inserted into the list.
+      # removed after more than 15 items are inserted into the list.
       # Do not explore
       stats = locAL.external(seq1, seq2, ms, seed[0], seed[1], seed[2])
       accuracy = float(stats[1]*100)/float(stats[0])
+      totalMM += stats[2]
+      totalGaps += stats[3]
 
-      if accuracy > min(best):
+      if accuracy > smallest:
         best[accuracy].append(seed)
 
-      # Remove all keys outside the top 20. Keep only top 20
-      if len(best) > 20:
+      # Keep only the best keys
+      if len(best) > 15:
+        overflow = True
         keys = best.keys()
         keys.sort(reverse = True)
         tempdict = defaultdict(list)
-        for i in range(20):
+        for i in range(15):
           tempdict[keys[i]] = best[keys[i]]
         best = tempdict
         # print best, numiterations
@@ -111,8 +168,20 @@ def optimize(seq1, seq2):
     print len(seeds), np.average(best.keys())
     numiterations += 1
 
-  print numiterations, gridsize, np.average(best.keys())
+  print '#iterations, gridsize, avg:', numiterations, gridsize, np.average(best.keys())
+  print 'totalGaps:', totalGaps, 'totalMM:', totalMM
+  print best.keys()
+
   setRange(best)
+  cutMM = False
+  cutGaps = False
+  if totalMM > threshold * totalGaps:
+    cutGaps = True
+    print 'cutGaps set to True'
+  elif totalGaps > threshold * totalMM:
+    cutMM = True
+    print 'cutMM set to True'
+
   return
 
 # Input: best, a dictionary.
@@ -142,8 +211,7 @@ def setRange(best):
       _go.append(value[1])
       _ge.append(value[2])
 
-  cullingNum = int(round(cullingPct * len(best.keys())))
-  print cullingNum, cullingPct, len(best.keys())
+  cullingNum = int(round(cullingPct * len(_mms)))
 
   arr = np.arange(len(best.keys()))
 
@@ -162,6 +230,7 @@ def setRange(best):
   print 'mms:', min(_mms), max(_mms)
   print 'go:', min(_go), max(_go)
   print 'ge:', min(_ge), max(_ge)
+  naiveVolume = (min(_mms) - max(_mms))
 
   print 'mms:', min(_mmsCulled), max(_mmsCulled)
   print 'go:', min(_goCulled), max(_goCulled)
