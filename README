@@ -1,0 +1,55 @@
+BIMM 185
+Spring 2014
+Max Shen
+
+A Machine Learning Approach to Optimization of 
+Sequence Alignment Scoring Parameters
+
+README: Documentation on How to Use Software
+
+===============================================================================
+TABLE OF CONTENTS
+1. Project Overview
+2. General Software Information and Dependencies
+3. List of Files and Running Instructions
+===============================================================================
+
+===============================================================================
+1. Project Overview
+===============================================================================
+
+===============================================================================
+2. General Software Information and Dependencies
+===============================================================================
+The software in this project are relatively simple - they are all small python
+scripts that are all run straight on the command line.
+
+Python version 2.6 or 2.7 is expected. 
+
+This project uses Numpy.
+
+No other dependencies exist.
+
+===============================================================================
+3. List of Files and Running Instructions
+===============================================================================
+mutate.py:
+  python mutate.py <pct identity> <len 1> <len2> <pct mismatch>
+    <pct identity>: A float between 0 and 1. Determines the % identity of the
+      two sequences
+    <len 1>: A positive integer value. Determines the length of the "matching"
+      sequence.
+    <len 2>: A positive integer value. Determines the length of the random
+      nucleotides set on both sides.
+    <pct mismatch>: The percentage of mutations that are mismatches. The rest
+      are gaps.
+
+optimize.py:
+  python optimize <input file> <input file 2> <cullingPct>
+    <input file>: A fasta filename. The 1st sequence in the file will be used.
+    <input file 2>: A fasta filename. The 1st sequence in the file will be
+      used.
+    <cullingPct>: A positive float, at most 1. Determines the percentage of
+      coordinates to cull in search space reduction.
+
+locAL.py: 
