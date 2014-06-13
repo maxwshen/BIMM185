@@ -8,8 +8,8 @@ import locAL
 from collections import defaultdict
 
 def main():
-  if len(sys.argv) != 3:
-    print 'Usage: python optimize <input file> <input file 2>'
+  if len(sys.argv) != 4:
+    print 'Usage: python optimize <input file> <input file 2> <cullingPct>'
     sys.exit(0)
 
   # Read in seqs
@@ -27,6 +27,10 @@ def main():
       sys.exit(0)
     seq2 = ''.join(lines[1:])
 
+  if float(sys.argv[3]) <= 0 or float(sys.argv[3]) > 1:
+    print 'Bad cullingPct'
+    sys.exit(0) 
+
   global ms
   global mms
   global go
@@ -38,6 +42,7 @@ def main():
   global ge_highbound
   global ge_lowbound
   global gridsize
+  global cullingPct
   ms = 1
   mms = -2
   go = -2
@@ -48,8 +53,10 @@ def main():
   go_lowbound = -4.5
   ge_highbound = 0
   ge_lowbound = -3
-  gridsizeAll = [0.5, 0.3, 0.2, 0.1]
+  # gridsizeAll = [0.5, 0.3, 0.2, 0.1]
+  gridsizeAll = [1.0, 0.8]
   gridsize = 0.5
+  cullingPct = float(sys.argv[3])
 
   for i in range(len(gridsizeAll)):
     gridsize = gridsizeAll[i]
@@ -120,27 +127,52 @@ def setRange(best):
   global go_highbound
   global ge_lowbound
   global ge_highbound
+  global cullingPct
 
-  _mms = set()
-  _go = set()
-  _ge = set()
+  _mms = []
+  _go = []
+  _ge = []
+  _mmsCulled = []
+  _goCulled = []
+  _geCulled = []
 
   for key in best:
     for value in best[key]:
-      _mms.add(value[0])
-      _go.add(value[1])
-      _ge.add(value[2])
+      _mms.append(value[0])
+      _go.append(value[1])
+      _ge.append(value[2])
+
+  cullingNum = int(round(cullingPct * len(best.keys())))
+  print cullingNum, cullingPct, len(best.keys())
+
+  arr = np.arange(len(best.keys()))
+
+  np.random.shuffle(arr)
+  for i in range(cullingNum):
+    _mmsCulled.append(_mms[i])
+
+  np.random.shuffle(arr)
+  for i in range(cullingNum):
+    _goCulled.append(_go[i])
+
+  np.random.shuffle(arr)
+  for i in range(cullingNum):
+    _geCulled.append(_ge[i])
 
   print 'mms:', min(_mms), max(_mms)
   print 'go:', min(_go), max(_go)
   print 'ge:', min(_ge), max(_ge)
 
-  mms_lowbound = min(_mms)
-  mms_highbound = max(_mms)
-  go_lowbound = min(_go)
-  go_highbound = max(_go)
-  ge_lowbound = min(_ge)
-  ge_highbound = max(_ge)
+  print 'mms:', min(_mmsCulled), max(_mmsCulled)
+  print 'go:', min(_goCulled), max(_goCulled)
+  print 'ge:', min(_geCulled), max(_geCulled)
+
+  mms_lowbound = min(_mmsCulled)
+  mms_highbound = max(_mmsCulled)
+  go_lowbound = min(_goCulled)
+  go_highbound = max(_goCulled)
+  ge_lowbound = min(_geCulled)
+  ge_highbound = max(_geCulled)
 
   return
 
