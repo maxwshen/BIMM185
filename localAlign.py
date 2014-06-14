@@ -1,3 +1,16 @@
+# BIMM 185, Spring 2014
+# Max Shen
+# localAlign.py
+#
+# localAlign.py:
+#   python localAlign <input file> <scoringfile>
+#     <input file>: A fasta filename. The 1st two sequences in the file are used.
+#     <scoringfile>: A scoring matrix for protein alignment.
+#   Summary: localAlign.py performs protein sequence alignment. It is not used
+#     in the final project, but represents preliminary work on extending the
+#     project to proteins.
+
+
 import sys
 import string
 import datetime

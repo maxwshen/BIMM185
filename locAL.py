@@ -83,7 +83,7 @@ def main():
   return locAL(seq1, seq2)
 
 # Used when calling locAL from another python script
-def external(seq1, seq2, mscore, mmscore, goscore, gescore):
+def external(seq1, seq2, mscore, mmscore, goscore, gescore, silence=True):
   global ms
   global mms
   global go
@@ -93,7 +93,10 @@ def external(seq1, seq2, mscore, mmscore, goscore, gescore):
   mms = float(mmscore)
   go = float(goscore)
   ge = float(gescore)
-  silenced = False
+  if silence is True:
+    silenced = True
+  else:
+    silenced = False
 
   return locAL(seq1, seq2)
 

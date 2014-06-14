@@ -1,3 +1,40 @@
+# BIMM 185, Spring 2014
+# optimize.py
+# Max Shen
+#
+# optimize.py:
+#   python optimize <input file> <input file 2> <cullingPct>
+#     <input file>: A fasta filename. The 1st sequence in the file will be used.
+#     <input file 2>: A fasta filename. The 1st sequence in the file will be
+#       used.
+#     <cullingPct>: A positive float, at most 1. Determines the percentage of
+#       coordinates to cull in search space reduction.
+#   Summary: optimize.py uses locAL.py to optimize a search space for the three
+#     variables: mismatch, gap open, gap extend. The most accurate alignments
+#     are used for training and results.
+
+# See the paper 'A Machine Learning Approach to Optimization of Sequence 
+# Alignment Scoring Parameters' on onelaboratory.org for a detailed explanation.
+
+# This project explores the usage of rational numbers for DNA sequence alignment
+# as opposed to simply integer values, as is used by all modern alignment tools
+# such as BLAST. A machine learning approach is used to explore the large search
+# space efficiently and intelligently - optimize.py trains on training DNA
+# sequences to decrease the search space size while keeping specificity and 
+# relevance to the nature of the training DNA sequences.
+
+# The program returns the most accurate and relevant alignments of two 
+# DNA sequences.
+
+# Run time depends on a large variety of factors and can be estimated by the
+# dynamic progress counter displayed when running the program. In general,
+# the program will take on the order of minutes to hours to run.
+
+# EXAMPLE RUN:
+# python optimize.py inP70.fasta in2P70.fasta 15 0.3 1.5 0.5
+
+# This takes about 6 minutes to run on a UCSD CSE building server. 
+
 import sys
 import string
 import datetime
@@ -166,7 +203,7 @@ def optimize(seq1, seq2):
       # in the dict best. Best is initialized containing 0 which is
       # removed after more than 15 items are inserted into the list.
       # Do not explore
-      stats = locAL.external(seq1, seq2, ms, seed[0], seed[1], seed[2])
+      stats = locAL.external(seq1, seq2, ms, seed[0], seed[1], seed[2], silence=True)
       accuracy = float(stats[1]*100)/float(stats[0])
       totalMM += stats[2]
       totalGaps += stats[3]
@@ -193,8 +230,13 @@ def optimize(seq1, seq2):
     sys.stdout.flush()
     numiterations += 1
 
-  print 'Done.\nAvg top accuracy:', np.average(best.keys())
-  # print best
+  print 'Done.\n'
+
+  print 'Best Alignments:'
+  for key in best:
+    locAL.external(seq1, seq2, ms, best[key][0][0], best[key][0][1], best[key][0][2], silence=False)
+
+  print 'Avg top accuracy:', np.average(best.keys())
   print 'totalGaps:', totalGaps, 'totalMM:', totalMM
   print best.keys()
 

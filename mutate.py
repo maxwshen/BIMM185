@@ -1,5 +1,5 @@
 # mutate.py
-# BIMM 185
+# BIMM 185, Spring 2014
 # Max Shen A10082759
 #
 # python mutate.py %identity len1 len2 %mismatch
