@@ -93,7 +93,7 @@ def external(seq1, seq2, mscore, mmscore, goscore, gescore):
   mms = float(mmscore)
   go = float(goscore)
   ge = float(gescore)
-  silenced = True
+  silenced = False
 
   return locAL(seq1, seq2)
 

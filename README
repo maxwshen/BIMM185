@@ -17,6 +17,27 @@ TABLE OF CONTENTS
 ===============================================================================
 1. Project Overview
 ===============================================================================
+See the paper 'A Machine Learning Approach to Optimization of Sequence 
+Alignment Scoring Parameters' on onelaboratory.org for a detailed explanation.
+
+This project explores the usage of rational numbers for DNA sequence alignment
+as opposed to simply integer values, as is used by all modern alignment tools
+such as BLAST. A machine learning approach is used to explore the large search
+space efficiently and intelligently - optimize.py trains on training DNA
+sequences to decrease the search space size while keeping specificity and 
+relevance to the nature of the training DNA sequences.
+
+The program returns the most accurate and relevant alignments of two 
+DNA sequences.
+
+Run time depends on a large variety of factors and can be estimated by the
+dynamic progress counter displayed when running the program. In general,
+the program will take on the order of minutes to hours to run.
+
+EXAMPLE RUN:
+python optimize.py inP70.fasta in2P70.fasta 15 0.3 1.5 0.5
+
+This takes about 6 minutes to run on a UCSD CSE building server. 
 
 ===============================================================================
 2. General Software Information and Dependencies
@@ -43,6 +64,8 @@ mutate.py:
       nucleotides set on both sides.
     <pct mismatch>: The percentage of mutations that are mismatches. The rest
       are gaps.
+  Summary: mutate.py randomly generates two DNA sequences of given similarity
+    and nature (indel heavy or mismatch heavy).
 
 optimize.py:
   python optimize <input file> <input file 2> <cullingPct>
@@ -51,5 +74,24 @@ optimize.py:
       used.
     <cullingPct>: A positive float, at most 1. Determines the percentage of
       coordinates to cull in search space reduction.
+  Summary: optimize.py uses locAL.py to optimize a search space for the three
+    variables: mismatch, gap open, gap extend. The most accurate alignments
+    are used for training and results.
 
 locAL.py: 
+  python locAL.py <seq file1> <seq file2> -m <match> -s <mismatch>
+    -go <gap-open> -ge gap-extend
+    <seq file1>: A fasta filename. The 1st sequence in the file will be used.
+    <seq file2>: A fasta filename. The 1st sequence in the file will be used.
+    All the other parameters are optional. They can be used in any order. 
+    Floats are anticipated for all scoring parameter values.
+  Summary: locAL.py performs local DNA sequence alignment with the support for
+    float values in its scoring parameters. 
+
+localAlign.py:
+  python localAlign <input file> <scoringfile>
+    <input file>: A fasta filename. The 1st two sequences in the file are used.
+    <scoringfile>: A scoring matrix for protein alignment.
+  Summary: localAlign.py performs protein sequence alignment. It is not used
+    in the final project, but represents preliminary work on extending the
+    project to proteins.

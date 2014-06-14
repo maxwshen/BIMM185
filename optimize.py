@@ -8,8 +8,8 @@ import locAL
 from collections import defaultdict
 
 def main():
-  if len(sys.argv) != 4:
-    print 'Usage: python optimize <input file> <input file 2> <cullingPct>'
+  if len(sys.argv) != 7:
+    print 'Usage: python optimize <input file> <input file 2> <nparam> <cullingPct> <threshold> <cutPercent>'
     sys.exit(0)
 
   # Read in seqs
@@ -29,12 +29,25 @@ def main():
     seq2name = lines[0].strip()
     seq2 = ''.join(lines[1:])
 
-  if float(sys.argv[3]) <= 0 or float(sys.argv[3]) > 1:
+  if int(sys.argv[3]) <= 0:
+    print 'Bad nparam'
+    sys.exit(0)
+
+  if float(sys.argv[4]) <= 0 or float(sys.argv[4]) > 1:
     print 'Bad cullingPct'
     sys.exit(0) 
 
+  if float(sys.argv[5]) <= 1:
+    print 'Bad threshold'
+    sys.exit(0)
+
+  if float(sys.argv[6]) <= 0 or float(sys.argv[6]) > 1:
+    print 'Bad cutPercent'
+    sys.exit(0)
+
   print 'Training on:\n\t', seq1name, '\n\t', seq2name, '\n'
 
+  global nparam
   global ms
   global mms
   global go
@@ -51,6 +64,7 @@ def main():
   global cutGaps
   global threshold
   global cutPercent
+  nparam = int(sys.argv[3])
   ms = 1
   mms = -2
   go = -2
@@ -62,14 +76,16 @@ def main():
   ge_highbound = 0
   ge_lowbound = -3
   # gridsizeAll = [0.5, 0.3, 0.2, 0.1]
-  # gridsizeAll = [0.5, 0.25]
-  gridsizeAll = [0.5]
+  gridsizeAll = [0.5, 0.25]
+  # gridsizeAll = [0.25]
   gridsize = 0.5
-  cullingPct = float(sys.argv[3])
+  cullingPct = float(sys.argv[4])
   cutMM = False
   cutGaps = False
-  threshold = 1.50
-  cutPercent = 0.50
+  # threshold = 1.50
+  threshold = float(sys.argv[5])
+  # cutPercent = 0.50
+  cutPercent = float(sys.argv[6])
 
   for i in range(len(gridsizeAll)):
     gridsize = gridsizeAll[i]
@@ -85,6 +101,7 @@ def main():
 #     ge_lowbound, and ge_highbound based on the most accurate
 #     alignments found in the search space.
 def optimize(seq1, seq2):
+  global nparam
   global cutMM
   global cutGaps
   global threshold
@@ -158,7 +175,7 @@ def optimize(seq1, seq2):
         best[accuracy].append(seed)
 
       # Keep only the best keys
-      if len(best) > 15:
+      if len(best) > nparam:
         overflow = True
         keys = best.keys()
         keys.sort(reverse = True)
@@ -177,6 +194,7 @@ def optimize(seq1, seq2):
     numiterations += 1
 
   print 'Done.\nAvg top accuracy:', np.average(best.keys())
+  # print best
   print 'totalGaps:', totalGaps, 'totalMM:', totalMM
   print best.keys()
 
@@ -249,7 +267,7 @@ def setRange(best):
 
   print 'No Culling : Search space reduced to', 100 * naiveVolume / initVolume, '%'
   print 'Culling at', cullingPct, ': Search space reduced to', 100 * culledVolume / initVolume, '%'
-  print 'Culling Improvement:', (naiveVolume - culledVolume) / initVolume, '%' 
+  print 'Culling Improvement:', 100 * (naiveVolume - culledVolume) / initVolume, '%' 
 
   mms_lowbound = min(_mmsCulled)
   mms_highbound = max(_mmsCulled)

@@ -38,7 +38,7 @@ def mutate(identity, len1, len2, pctmm):
   seqs = [list(seq1), list(seq2)]
 
   numMutations = int(round(len1*(1-identity)))
-  print 'Inducing', numMutations, 'mutations:', 1 - float(numMutations)/float(len1), identity
+  # print 'Inducing', numMutations, 'mutations:', 1 - float(numMutations)/float(len1), identity
 
   for i in range(numMutations):
     seq = seqs[np.random.randint(0, high = 2)]
@@ -83,7 +83,7 @@ def randomNT(len):
 # main
 if __name__ == '__main__':
   start = datetime.datetime.now()
-  print 'Start:', start
+  # print 'Start:', start
   main()
   end = datetime.datetime.now()
-  print '\nEnd:', end, '\nTotal:', end - start
+  # print '\nEnd:', end, '\nTotal:', end - start
